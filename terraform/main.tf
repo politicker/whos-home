@@ -34,5 +34,5 @@ resource "aws_lambda_function" "location_change_handler" {
 	function_name = "location_change_handler"
 	role = aws_iam_role.whos_home_lambda.arn
 	runtime = "provided.al2"
-	# handler = ""
+	handler = "handle_arrival"
 }
