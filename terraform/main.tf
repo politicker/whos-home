@@ -1,27 +1,33 @@
-resource "aws_sns_topic" "whos-home" {
-	name = "whos-home.fifo"
+resource "aws_sns_topic" "whos_home" {
+	name = "whos_home.fifo"
 	fifo_topic = true
 	content_based_deduplication = true
 }
 
-resource "aws_sqs_queue" "whos-home-queue-quinn" {
-  name = "whos-home-quinn.fifo"
+resource "aws_sqs_queue" "whos_home_queue_quinn" {
+  name = "whos_home_quinn.fifo"
 	fifo_queue = true
 	content_based_deduplication = true
 }
 
-resource "aws_sns_topic_subscription" "whos-home-topic-subscription-quinn" {
-	topic_arn = aws_sns_topic.whos-home.arn
+resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
+	topic_arn = aws_sns_topic.whos_home.arn
 	protocol  = "sqs"
-	endpoint = aws_sqs_queue.whos-home-queue-quinn.arn
+	endpoint = aws_sqs_queue.whos_home_queue_quinn.arn
 }
 
-# TODO: This exists already in AWS, might need to delete it and have tf re-create it
-resource "aws_iam_role" "whos-home-lambda" {}
+data "aws_iam_policy" "lambda_sns_publisher" {
+	name = "AmazonSNSFullAccess"
+}
+
+resource "aws_iam_role" "whos_home_lambda" {
+	name = "whos_home_lambda"
+	assume_role_policy = aws_iam_policy.lambda_sns_publisher.json
+}
 
 # TODO: Can this just connect the function to the role? Probably not..
-resource "aws_lambda_function" "whos-home-arrival-handler" {
+resource "aws_lambda_function" "whos_home_arrival_handler" {
 	# filename = "arrivals_handler/function.zip"
-	# function_name = "whos-home-arrival-handler"
-	role = aws_iam_role.whos-home-lambda.arn
+	# function_name = "whos_home_arrival_handler"
+	role = aws_iam_role.whos_home_lambda.arn
 }
