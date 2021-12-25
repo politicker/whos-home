@@ -16,13 +16,20 @@ resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
 	endpoint = aws_sqs_queue.whos_home_queue_quinn.arn
 }
 
-data "aws_iam_policy" "lambda_sns_publisher_policy" {
-	name = "AmazonSNSFullAccess"
-}
-
 resource "aws_iam_role" "whos_home_lambda" {
 	name = "whos_home_lambda"
-	assume_role_policy = data.aws_iam_policy.lambda_sns_publisher_policy.policy
+	assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "sns:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        }
+    ]
+	})
 }
 
 # Error: handler and runtime must be set when PackageType is Zip
