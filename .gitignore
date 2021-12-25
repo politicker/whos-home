@@ -2,3 +2,4 @@
 .env
 
 arrivals_handler/target
+terraform/.terraform
