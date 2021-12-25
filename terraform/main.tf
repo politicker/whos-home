@@ -16,8 +16,13 @@ resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
 	endpoint = aws_sqs_queue.whos_home_queue_quinn.arn
 }
 
-data "aws_iam_policy" "lambda_sns_publisher" {
+data "aws_iam_policy" "lambda_sns_publisher_policy" {
 	name = "AmazonSNSFullAccess"
+}
+
+data "aws_iam_policy_document" "lambda_sns_publisher_policy_doc" {
+	name = "AmazonSNSFullAccess"
+	policy_id = data.aws_iam_policy.lambda_sns_publisher_policy.policy_id
 }
 
 resource "aws_iam_role" "whos_home_lambda" {
