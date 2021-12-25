@@ -18,9 +18,9 @@ resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
 }
 
 # Error: handler and runtime must be set when PackageType is Zip
-resource "aws_lambda_function" "location_change_handler" {
-  function_name = "location_change_handler"
-  role          = aws_iam_role.whos_home_lambda.arn
-  runtime       = "provided.al2"
-  handler       = "handle_arrival"
-}
+# resource "aws_lambda_function" "location_change_handler" {
+#   function_name = "location_change_handler"
+#   role          = aws_iam_role.whos_home_lambda.arn
+#   runtime       = "provided.al2"
+#   handler       = "handle_arrival"
+# }
