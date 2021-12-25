@@ -6,15 +6,20 @@ extern crate serde_derive;
 extern crate log;
 extern crate simple_logger;
 
-use lambda::error::HandlerError;
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_sns::Client;
 
+use lambda::error::HandlerError;
 use std::error::Error;
 
+// {
+//   "device_id": "23lk4j2kl3j234",
+//   "name": "Harrison",
+//   "location": "Home",
+//   "event": "ARRIVE" // ARRIVE | LEAVE
+// }
 #[derive(Deserialize, Clone)]
-struct CustomEvent {
-	#[serde(rename = "firstName")]
-	first_name: String,
-}
+struct CustomEvent {}
 
 #[derive(Serialize, Clone)]
 struct CustomOutput {
@@ -28,13 +33,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 	Ok(())
 }
 
-fn handle_arrival(e: CustomEvent, c: lambda::Context) -> Result<CustomOutput, HandlerError> {
-	if e.first_name == "" {
-		error!("Empty first name in request {}", c.aws_request_id);
-		return Err(c.new_error("Empty first name"));
-	}
+fn handle_arrival(_: CustomEvent, _: lambda::Context) -> Result<CustomOutput, HandlerError> {
+	let region_provider = RegionProviderChain::default_provider().or_else("us-east-2");
+	let config = aws_config::from_env().region(region_provider).load().await;
+	let client = Client::new(&config);
 
 	Ok(CustomOutput {
-		message: format!("Hello, {}!", e.first_name),
+		message: String::from("success"),
 	})
 }
