@@ -15,12 +15,15 @@ build-linux:
 	cargo build --release
 
 package:
+	cd arrivals_handler && \
 	zip -j function.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
 
 package-linux:
+	cd arrivals_handler && \
 	zip -j function.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
 
 publish: build-macos package
+	cd arrivals_handler && \
 	aws create-function \
 	--role whos_home_lambda \
 	--function-name location_change_handler \
@@ -29,6 +32,7 @@ publish: build-macos package
 	--zip-file function.zip
 
 publish-linux: build-linux package-linux
+	cd arrivals_handler && \
 	aws create-function \
 	--role whos_home_lambda \
 	--function-name location_change_handler \
