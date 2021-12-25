@@ -22,7 +22,7 @@ data "aws_iam_policy" "lambda_sns_publisher" {
 
 resource "aws_iam_role" "whos_home_lambda" {
 	name = "whos_home_lambda"
-	assume_role_policy = aws_iam_policy.lambda_sns_publisher.json
+	assume_role_policy = data.aws_iam_policy.lambda_sns_publisher.json
 }
 
 # TODO: Can this just connect the function to the role? Probably not..
