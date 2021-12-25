@@ -20,13 +20,9 @@ data "aws_iam_policy" "lambda_sns_publisher_policy" {
 	name = "AmazonSNSFullAccess"
 }
 
-data "aws_iam_policy_document" "lambda_sns_publisher_policy_doc" {
-	policy_id = data.aws_iam_policy.lambda_sns_publisher_policy.policy_id
-}
-
 resource "aws_iam_role" "whos_home_lambda" {
 	name = "whos_home_lambda"
-	assume_role_policy = data.aws_iam_policy_document.lambda_sns_publisher_policy_doc.json
+	assume_role_policy = data.aws_iam_policy.lambda_sns_publisher_policy.policy.json
 }
 
 # Error: handler and runtime must be set when PackageType is Zip
