@@ -22,7 +22,7 @@ data "aws_iam_policy" "lambda_sns_publisher_policy" {
 
 resource "aws_iam_role" "whos_home_lambda" {
 	name = "whos_home_lambda"
-	assume_role_policy = data.aws_iam_policy.lambda_sns_publisher_policy.policy.json
+	assume_role_policy = data.aws_iam_policy.lambda_sns_publisher_policy.policy
 }
 
 # Error: handler and runtime must be set when PackageType is Zip
