@@ -10,7 +10,10 @@ resource "aws_iam_role" "whos_home_lambda" {
       {
         Action : "sts:AssumeRole",
         Principal : {
-          Service : "ec2.amazonaws.com"
+          Service : [
+            "ec2.amazonaws.com",
+            "lambda.amazonaws.com"
+          ]
         },
         Effect : "Allow",
         Sid : ""

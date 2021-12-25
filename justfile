@@ -6,36 +6,20 @@ run:
 plan:
 	cd terraform && terraform plan
 
-build-macos:
+build:
 	cd arrivals_handler && \
 	cargo build --release --target x86_64-unknown-linux-musl
-
-build-linux:
-	cd arrivals_handler && \
-	cargo build --release
 
 package:
 	cd arrivals_handler && \
 	zip -j function.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
 
-package-linux:
+publish: build package
 	cd arrivals_handler && \
-	zip -j function.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
-
-publish: build-macos package
-	cd arrivals_handler && \
-	aws create-function \
-	--role whos_home_lambda \
+	aws lambda create-function \
+	--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
 	--function-name location_change_handler \
 	--runtime provided.al2 \
+	--handler bootstrap \
 	--package-type Zip \
-	--zip-file function.zip
-
-publish-linux: build-linux package-linux
-	cd arrivals_handler && \
-	aws create-function \
-	--role whos_home_lambda \
-	--function-name location_change_handler \
-	--runtime provided.al2 \
-	--package-type Zip \
-	--zip-file function.zip
+	--zip-file fileb://function.zip
