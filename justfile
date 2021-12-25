@@ -21,7 +21,7 @@ publish: build package
 		--zip-file fileb://function.zip \
 		--publish
 
-create-function:
+create-function: build package
 	cd location_change_handler && \
 	aws lambda create-function \
 	--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
