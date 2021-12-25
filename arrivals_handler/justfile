@@ -9,6 +9,19 @@ build-linux:
 package:
 	zip -j function.zip ./target/x86_64-unknown-linux-musl/release/bootstrap
 
-# TODO: Make me more dynamic, based on the host OS?
 publish: build-macos package
-	aws create-function --role whos-home-lambda --function-name arrivals-handler --runtime provided.al2 --package-type Zip --zip-file function.zip
+	aws create-function \
+	--role whos_home_lambda \
+	--function-name location_change_handler \
+	--runtime provided.al2 \
+	--package-type Zip \
+	--zip-file function.zip
+
+publish-linux: build-linux package
+	aws create-function \
+	--role whos_home_lambda \
+	--function-name location_change_handler \
+	--runtime provided.al2 \
+	--package-type Zip \
+	--zip-file function.zip
+

@@ -29,9 +29,7 @@ resource "aws_iam_role" "whos_home_lambda" {
 	assume_role_policy = data.aws_iam_policy_document.lambda_sns_publisher_policy_doc.json
 }
 
-# TODO: Can this just connect the function to the role? Probably not..
-resource "aws_lambda_function" "whos_home_arrival_handler" {
-	# filename = "arrivals_handler/function.zip"
-	# function_name = "whos_home_arrival_handler"
+resource "aws_lambda_function" "location_change_handler" {
+	function_name = "location_change_handler"
 	role = aws_iam_role.whos_home_lambda.arn
 }
