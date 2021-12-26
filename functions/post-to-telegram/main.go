@@ -52,10 +52,14 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	var payload MessagePayload
+	payload := MessagePayload{}
+	payload2 := map[string]string{}
 
 	for _, message := range sqsEvent.Records {
 		json.Unmarshal([]byte(message.Body), &payload)
+		json.Unmarshal([]byte(message.Body), &payload2)
+
+		log.Println(payload2)
 
 		messageText := fmt.Sprintf("%s is at %s", payload.Name, payload.LocationName)
 		msg := tgbotapi.NewMessage(channelID, messageText)
