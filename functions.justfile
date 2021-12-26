@@ -1,10 +1,3 @@
-set dotenv-load := true
-
-run:
-	cargo r
-
-plan:
-	cd terraform && terraform plan
 
 build:
 	#!/usr/bin/env bash
@@ -33,21 +26,3 @@ create-cmd:
 	--runtime go1.x \
 	--package-type Zip \
 	--zip-file fileb://function.zip
-
-publish function:
-	#!/usr/bin/env bash
-	set -euxo pipefail
-
-	just \
-		--working-directory functions/{{ function }} \
-		--justfile ./justfile \
-		build package upload-cmd cleanup
-
-create function:
-	#!/usr/bin/env bash
-	set -euxo pipefail
-
-	just \
-		--working-directory functions/{{ function }} \
-		--justfile ./justfile \
-		build package create-cmd cleanup
