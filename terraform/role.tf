@@ -22,11 +22,20 @@ resource "aws_iam_role" "whos_home_lambda" {
   })
 }
 
-data "aws_iam_policy" "lambda_sns_publisher_policy" {
+data "aws_iam_policy" "AmazonSNSFullAccess" {
   name = "AmazonSNSFullAccess"
+}
+
+data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
+  name = "AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_role_policy_attachment" "role_policy_attachment" {
   role       = aws_iam_role.whos_home_lambda.name
-  policy_arn = data.aws_iam_policy.lambda_sns_publisher_policy.arn
+  policy_arn = data.aws_iam_policy.AmazonSNSFullAccess.arn
+}
+
+resource "aws_iam_role_policy_attachment" "role_policy_attachment" {
+  role       = aws_iam_role.whos_home_lambda.name
+  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
 }
