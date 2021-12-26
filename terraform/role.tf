@@ -30,12 +30,12 @@ data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
   name = "AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy_attachment" "role_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "attach_AmazonSNSFullAccess" {
   role       = aws_iam_role.whos_home_lambda.name
   policy_arn = data.aws_iam_policy.AmazonSNSFullAccess.arn
 }
 
-resource "aws_iam_role_policy_attachment" "role_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "attach_AWSLambdaBasicExecutionRole" {
   role       = aws_iam_role.whos_home_lambda.name
   policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
 }
