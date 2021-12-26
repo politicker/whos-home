@@ -26,17 +26,26 @@ var AWS_TOPIC_ARN string = os.Getenv("AWS_TOPIC_ARN")
 var MESSAGE_GROUP_ID string = os.Getenv("MESSAGE_GROUP_ID")
 
 func HandleLocationChange(ctx context.Context, data LocationChangePayload) error {
+	if AWS_TOPIC_ARN == "" {
+		return fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
+	}
+	if MESSAGE_GROUP_ID == "" {
+		return fmt.Errorf("missing MESSAGE_GROUP_ID environment variable")
+	}
+
 	// Initialize a session that the SDK will use to load
 	// credentials from the shared credentials file. (~/.aws/credentials).
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
+	sess, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-	}))
-
+	})
+	if err != nil {
+		return fmt.Errorf("error creating session: %v", err)
+	}
 	svc := sns.New(sess)
 
 	b, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return fmt.Errorf("json marshal error: %v", err)
 	}
 	str := string(b)
 
@@ -46,11 +55,10 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 		MessageGroupId: &MESSAGE_GROUP_ID,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error publishing to sns: %v", err)
 	}
 
 	fmt.Println(*result.MessageId)
-
 	return nil
 }
 
