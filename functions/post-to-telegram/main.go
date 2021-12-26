@@ -38,6 +38,10 @@ func init() {
 }
 
 type MessagePayload struct {
+	Message string `json:"Message"`
+}
+
+type LocationChangeEvent struct {
 	Name         string `json:"name"`
 	LocationName string `json:"location_name"`
 }
@@ -53,15 +57,13 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
 	payload := MessagePayload{}
-	payload2 := map[string]string{}
+	event := LocationChangeEvent{}
 
 	for _, message := range sqsEvent.Records {
 		json.Unmarshal([]byte(message.Body), &payload)
-		json.Unmarshal([]byte(message.Body), &payload2)
+		json.Unmarshal([]byte(payload.Message), &event)
 
-		log.Println(payload2)
-
-		messageText := fmt.Sprintf("%s is at %s", payload.Name, payload.LocationName)
+		messageText := fmt.Sprintf("%s is at %s", event.Name, event.LocationName)
 		msg := tgbotapi.NewMessage(channelID, messageText)
 		bot.Send(msg)
 	}
