@@ -1,10 +1,11 @@
 
 resource "aws_sns_topic" "whos_home" {
-  name                          = "whos_home.fifo"
-  fifo_topic                    = true
-  content_based_deduplication   = true
-  sqs_success_feedback_role_arn = aws_iam_role.sns_logger.arn
-  sqs_failure_feedback_role_arn = aws_iam_role.sns_logger.arn
+  name                             = "whos_home.fifo"
+  fifo_topic                       = true
+  content_based_deduplication      = true
+  sqs_success_feedback_role_arn    = aws_iam_role.sns_logger.arn
+  sqs_failure_feedback_role_arn    = aws_iam_role.sns_logger.arn
+  sqs_success_feedback_sample_rate = 100
 }
 
 resource "aws_sqs_queue" "whos_home_queue_quinn" {
