@@ -71,21 +71,21 @@ resource "aws_iam_role_policy_attachment" "attach_CloudWatchLogsFullAccess" {
 
 data "aws_iam_policy_document" "sqs_access" {
   statement {
-    sid = "1"
+    sid = "2"
     actions = [
       "sqs:ReceiveMessage",
       "sqs:DeleteMessage",
       "sqs:GetQueueAttributes"
     ]
     resources = [
-      aws_sqs_queue.whos_home_queue_telegram_bot.arn
+      "*" # aws_sqs_queue.whos_home_queue_telegram_bot.arn
     ]
   }
 }
 
 resource "aws_iam_policy" "sqs_access" {
-  name   = "whos_home_lambda_sqs_access"
-  policy = data.aws_iam_policy_document.sqs_access.json
+  name                   = "whos_home_lambda_sqs_access"
+  policy                 = data.aws_iam_policy_document.sqs_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "sqs_access" {

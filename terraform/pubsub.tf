@@ -20,8 +20,8 @@ resource "aws_sqs_queue" "whos_home_queue_telegram_bot" {
   name                        = "whos_home_telegram.fifo"
   fifo_queue                  = true
   content_based_deduplication = false
-  deduplication_scope         = "messageGroup"
-  fifo_throughput_limit       = "perMessageGroupId"
+  deduplication_scope         = "queue"
+  fifo_throughput_limit       = "perQueue"
 }
 
 resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
@@ -35,6 +35,7 @@ resource "aws_sns_topic_subscription" "whos_home_topic_subscription_telegram_bot
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.whos_home_queue_telegram_bot.arn
 }
+
 data "aws_lambda_function" "telegram_bot" {
   function_name = "post-to-telegram"
 }
