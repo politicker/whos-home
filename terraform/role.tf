@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "sqs_access" {
 
 resource "aws_iam_policy" "sqs_access" {
   name   = "whos_home_lambda_sqs_access"
-  policy = data.aws_iam_policy_document.YOUR_DOCUMENT.json
+  policy = data.aws_iam_policy_document.sqs_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "sqs_access" {
