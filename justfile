@@ -27,3 +27,6 @@ create function:
 		--working-directory functions/{{ function }} \
 		--justfile ./functions.justfile \
 		build package create-cmd cleanup
+
+test-telegram:
+	cd telegram-test && go run main.go
