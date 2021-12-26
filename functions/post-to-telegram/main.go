@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -36,6 +37,11 @@ func init() {
 	channelID = int64(channelInt)
 }
 
+type MessagePayload struct {
+	Name         string `json:"name"`
+	LocationName string `json:"location_name"`
+}
+
 func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -46,11 +52,16 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
+	var payload MessagePayload
+
 	for _, message := range sqsEvent.Records {
 		json.Unmarshal([]byte(message.Body), &payload)
-		msg := tgbotapi.NewMessage(channelID, "hi from bot")
+
+		messageText := fmt.Sprintf("%s is at %s", payload.Name, payload.LocationName)
+		msg := tgbotapi.NewMessage(channelID, messageText)
 		bot.Send(msg)
 	}
+
 	return nil
 }
 
