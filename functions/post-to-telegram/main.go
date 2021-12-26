@@ -2,13 +2,36 @@ package main
 
 import (
 	"log"
+	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var channelID int64 = -1001608175662
-var botToken string = "5002335179:AAHBzgbAc73LglnhYbDpp8lcZx1IeHuKi6c"
+var channelID int64
+var botToken string
+
+func init() {
+	channelString := os.Getenv("TELEGRAM_CHANNEL_ID")
+
+	if channelString == "" {
+		log.Panicln("env TELEGRAM_CHANNEL_ID undefined")
+	}
+
+	botToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+
+	if botToken == "" {
+		log.Panicln("env TELEGRAM_BOT_TOKEN undefined")
+	}
+
+	channelInt, err := strconv.Atoi(channelString)
+	if err != nil {
+		log.Panicln("env TELEGRAM_CHANNEL_ID invalid int")
+	}
+
+	channelID = int64(channelInt)
+}
 
 func Handle() {
 	bot, err := tgbotapi.NewBotAPI(botToken)
