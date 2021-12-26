@@ -9,6 +9,10 @@ terraform {
   }
 }
 
+provider "aws" {
+  region = "us-east-2"
+}
+
 output "base_url" {
   description = "Base URL for API Gateway stage."
 

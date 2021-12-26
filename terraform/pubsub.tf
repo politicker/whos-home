@@ -17,7 +17,7 @@ resource "aws_sqs_queue" "whos_home_queue_quinn" {
 }
 
 resource "aws_sqs_queue" "whos_home_queue_telegram_bot" {
-  name                        = "whos_home_telegram_bot.fifo"
+  name                        = "whos_home_telegram.fifo"
   fifo_queue                  = true
   content_based_deduplication = false
   deduplication_scope         = "messageGroup"
