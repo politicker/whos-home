@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package whos_home;
+
+enum LocationChangeStatus {
+    ARRIVAL = 0;
+    DEPARTURE = 1;
+}
+
+message locationChangeEvent {
+    string name = 1;
+    string location_name = 2;
+    LocationChangeStatus status = 3;
+}
