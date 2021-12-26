@@ -1,5 +1,7 @@
 /target
 .env
+*.zip
 
 arrivals_handler/target
 terraform/.terraform
+location_change_handler/main
