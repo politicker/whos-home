@@ -7,29 +7,25 @@ plan:
 	cd terraform && terraform plan
 
 build:
-	cd location_change_handler && \
+	#!/usr/bin/env bash
+	set -euxo pipefail
+
 	GOOS=linux go build main.go
 
 package:
-	cd location_change_handler && \
 	zip -j function.zip ./main
 
 cleanup:
-	cd location_change_handler && \
 	rm function.zip && \
 	rm main
 
-upload:
-	cd location_change_handler && \
+upload-cmd:
 	aws lambda update-function-code \
 		--function-name location_change_handler \
 		--zip-file fileb://function.zip \
 		--publish
 
-publish: build package upload cleanup
-
-create-upload:
-	cd location_change_handler && \
+create-cmd:
 	aws lambda create-function \
 	--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
 	--function-name location_change_handler \
@@ -38,4 +34,20 @@ create-upload:
 	--package-type Zip \
 	--zip-file fileb://function.zip
 
-create: build package create-upload cleanup
+publish function:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+
+	just \
+		--working-directory {{ function }} \
+		--justfile ./justfile \
+		build package upload-cmd cleanup
+
+create function:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+
+	just \
+		--working-directory {{ function }} \
+		--justfile ./justfile \
+		build package create-upload-cmd cleanup
