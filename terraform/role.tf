@@ -1,5 +1,4 @@
 
-
 resource "aws_iam_role" "whos_home_lambda" {
   name = "whos_home_lambda"
   path = "/"
@@ -79,6 +78,11 @@ data "aws_iam_policy_document" "sqs_access" {
       aws_sqs_queue.whos_home_queue_telegram_bot.arn
     ]
   }
+}
+
+resource "aws_iam_policy" "sqs_access" {
+  name   = "whos_home_lambda_sqs_access"
+  policy = data.aws_iam_policy_document.sqs_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "sqs_access" {
