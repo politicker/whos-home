@@ -16,7 +16,7 @@ publish function:
 	just \
 		--working-directory functions/{{ function }} \
 		--justfile ./functions.justfile \
-		build package upload-cmd cleanup
+		build package upload-cmd
 
 # initialize a named lambda. Should be run only once
 create function:
