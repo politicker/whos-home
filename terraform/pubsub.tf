@@ -1,8 +1,10 @@
 
 resource "aws_sns_topic" "whos_home" {
-  name                        = "whos_home.fifo"
-  fifo_topic                  = true
-  content_based_deduplication = true
+  name                                  = "whos_home.fifo"
+  fifo_topic                            = true
+  content_based_deduplication           = true
+  application_success_feedback_role_arn = aws_iam_role.sns_logger.arn
+  application_failure_feedback_role_arn = aws_iam_role.sns_logger.arn
 }
 
 resource "aws_sqs_queue" "whos_home_queue_quinn" {
