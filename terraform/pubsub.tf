@@ -8,7 +8,7 @@ resource "aws_sns_topic" "whos_home" {
 resource "aws_sqs_queue" "whos_home_queue_quinn" {
   name                        = "whos_home_quinn.fifo"
   fifo_queue                  = true
-  content_based_deduplication = true
+  content_based_deduplication = false
 }
 
 resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
