@@ -29,10 +29,14 @@ resource "aws_iam_role" "sns_logger" {
     "Version" : "2012-10-17",
     "Statement" : [
       {
-        "Action" : [
-          "logs:*"
-        ],
+        Action : "sts:AssumeRole",
+        Principal : {
+          Service : [
+            "sns.amazonaws.com"
+          ]
+        },
         "Effect" : "Allow",
+        Sid : ""
       }
     ]
   })
