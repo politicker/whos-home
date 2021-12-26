@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 // {
@@ -34,13 +35,13 @@ type LocationChangeResponse struct {
 var AWS_TOPIC_ARN string = os.Getenv("AWS_TOPIC_ARN")
 var MESSAGE_GROUP_ID string = os.Getenv("MESSAGE_GROUP_ID")
 
-func serverError(err error) LocationChangeResponse {
+func serverError(err error) (LocationChangeResponse, error) {
 	log.Println(err)
 
 	return LocationChangeResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       err.Error(),
-	}
+	}, err
 }
 
 func HandleLocationChange(ctx context.Context, data LocationChangePayload) (LocationChangeResponse, error) {
@@ -48,11 +49,11 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) (Loca
 
 	if AWS_TOPIC_ARN == "" {
 		err := fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
-		return serverError(err), err
+		return serverError(err)
 	}
 	if MESSAGE_GROUP_ID == "" {
 		err := fmt.Errorf("missing MESSAGE_GROUP_ID environment variable")
-		return serverError(err), err
+		return serverError(err)
 	}
 
 	// Initialize a session that the SDK will use to load
@@ -61,24 +62,30 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) (Loca
 		SharedConfigState: session.SharedConfigEnable,
 	})
 	if err != nil {
-		return serverError(err), err
+		return serverError(err)
 	}
 	svc := sns.New(sess)
 
 	b, err := json.Marshal(data)
 	if err != nil {
-		return serverError(err), err
+		return serverError(err)
 	}
-
 	str := string(b)
 
+	uid, err := uuid.NewV4()
+	if err != nil {
+		return serverError(err)
+	}
+	dedupeID := uid.String()
+
 	result, err := svc.Publish(&sns.PublishInput{
-		Message:        &str,
-		TopicArn:       &AWS_TOPIC_ARN,
-		MessageGroupId: &MESSAGE_GROUP_ID,
+		Message:                &str,
+		TopicArn:               &AWS_TOPIC_ARN,
+		MessageGroupId:         &MESSAGE_GROUP_ID,
+		MessageDeduplicationId: &dedupeID,
 	})
 	if err != nil {
-		return serverError(err), err
+		return serverError(err)
 	}
 
 	fmt.Println(*result.MessageId)
