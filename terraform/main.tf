@@ -1,26 +1,16 @@
+terraform {
+  backend "remote" {
+    hostname     = "app.terraform.io"
+    organization = "whos-home"
 
-resource "aws_sns_topic" "whos_home" {
-  name                        = "whos_home.fifo"
-  fifo_topic                  = true
-  content_based_deduplication = true
+    workspaces {
+      name = "whos-home"
+    }
+  }
 }
 
-resource "aws_sqs_queue" "whos_home_queue_quinn" {
-  name                        = "whos_home_quinn.fifo"
-  fifo_queue                  = true
-  content_based_deduplication = true
-}
+output "base_url" {
+  description = "Base URL for API Gateway stage."
 
-resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
-  topic_arn = aws_sns_topic.whos_home.arn
-  protocol  = "sqs"
-  endpoint  = aws_sqs_queue.whos_home_queue_quinn.arn
+  value = aws_apigatewayv2_stage.whos_home_gateway.invoke_url
 }
-
-# Error: handler and runtime must be set when PackageType is Zip
-# resource "aws_lambda_function" "location_change_handler" {
-#   function_name = "location_change_handler"
-#   role          = aws_iam_role.whos_home_lambda.arn
-#   runtime       = "provided.al2"
-#   handler       = "handle_arrival"
-# }
