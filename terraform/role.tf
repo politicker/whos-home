@@ -33,7 +33,6 @@ resource "aws_iam_role" "sns_logger" {
           "logs:*"
         ],
         "Effect" : "Allow",
-        "Resource" : "*"
       }
     ]
   })
