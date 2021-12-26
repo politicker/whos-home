@@ -42,8 +42,9 @@ type MessagePayload struct {
 }
 
 type LocationChangeEvent struct {
-	Name         string `json:"name"`
-	LocationName string `json:"location_name"`
+	Name     string `json:"name"`
+	Location string `json:"location"`
+	Event    string `json:"event"`
 }
 
 func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
@@ -63,7 +64,14 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 		json.Unmarshal([]byte(message.Body), &payload)
 		json.Unmarshal([]byte(payload.Message), &event)
 
-		messageText := fmt.Sprintf("%s is at %s", event.Name, event.LocationName)
+		var messageText string
+
+		if event.Event == "ARRIVING" {
+			messageText = fmt.Sprintf("%s is arriving %s", event.Name, event.Location)
+		} else {
+			messageText = fmt.Sprintf("%s is leaving %s", event.Name, event.Location)
+		}
+
 		msg := tgbotapi.NewMessage(channelID, messageText)
 		bot.Send(msg)
 	}
