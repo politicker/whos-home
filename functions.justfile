@@ -1,3 +1,4 @@
+set dotenv-load := true
 
 build:
 	#!/usr/bin/env bash
@@ -14,15 +15,17 @@ cleanup:
 
 upload-cmd:
 	aws lambda update-function-code \
+		--region us-east-2 \
 		--function-name `basename $(pwd)` \
 		--zip-file fileb://function.zip \
 		--publish
 
 create-cmd:
 	aws lambda create-function \
-	--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
-	--function-name `basename $(pwd)` \
-	--handler main \
-	--runtime go1.x \
-	--package-type Zip \
-	--zip-file fileb://function.zip
+		--region us-east-2 \
+		--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
+		--function-name `basename $(pwd)` \
+		--handler main \
+		--runtime go1.x \
+		--package-type Zip \
+		--zip-file fileb://function.zip
