@@ -21,14 +21,14 @@ cleanup:
 
 upload-cmd:
 	aws lambda update-function-code \
-		--function-name location_change_handler \
+		--function-name `basename $(pwd)` \
 		--zip-file fileb://function.zip \
 		--publish
 
 create-cmd:
 	aws lambda create-function \
 	--role "arn:aws:iam::114418550400:role/whos_home_lambda" \
-	--function-name location_change_handler \
+	--function-name `basename $(pwd)` \
 	--handler main \
 	--runtime go1.x \
 	--package-type Zip \
@@ -39,7 +39,7 @@ publish function:
 	set -euxo pipefail
 
 	just \
-		--working-directory {{ function }} \
+		--working-directory functions/{{ function }} \
 		--justfile ./justfile \
 		build package upload-cmd cleanup
 
@@ -48,6 +48,6 @@ create function:
 	set -euxo pipefail
 
 	just \
-		--working-directory {{ function }} \
+		--working-directory functions/{{ function }} \
 		--justfile ./justfile \
-		build package create-upload-cmd cleanup
+		build package create-cmd cleanup
