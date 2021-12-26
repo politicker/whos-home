@@ -30,3 +30,14 @@ create function:
 
 test-telegram:
 	cd telegram-test && go run main.go
+
+test-publish:
+	#!/usr/bin/env bash
+	set -euxo pipefail
+
+	aws sns publish \
+		--region us-east-2 \
+		--topic-arn arn:aws:sns:us-east-2:114418550400:whos_home.fifo \
+		--message-group-id "$(echo $RANDOM | md5sum | head -c 2)" \
+		--message-deduplication-id "$(echo $RANDOM | md5sum | head -c 2)" \
+		--message "test delivery message $(date)"
