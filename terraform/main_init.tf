@@ -4,13 +4,7 @@ terraform {
     organization = "whos-home"
 
     workspaces {
-      name = "whos-whome"
+      name = "whos-home"
     }
   }
-}
-
-
-provider "aws" {
-  region  = "us-east-2"
-  profile = "whos-home"
 }
