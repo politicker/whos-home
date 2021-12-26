@@ -29,7 +29,7 @@ resource "aws_apigatewayv2_stage" "whos_home_gateway_stage" {
 }
 
 data "aws_lambda_function" "lambda" {
-  name = "location_change_handler"
+  function_name = "location_change_handler"
 }
 
 resource "aws_apigatewayv2_integration" "gateway_lambda_integration" {
