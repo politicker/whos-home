@@ -42,7 +42,7 @@ resource "aws_iam_role_policy_attachment" "attach_AWSLambdaBasicExecutionRole" {
 
 data "aws_iam_policy_document" "sqs_access" {
   statement {
-    sid = "some_id"
+    sid = "1"
     actions = [
       "sqs:ReceiveMessage",
       "sqs:DeleteMessage",
