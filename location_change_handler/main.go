@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -19,33 +19,21 @@ import (
 //   "location": "Home",
 //   "event": "ARRIVE" // ARRIVE | LEAVE
 // }
-type LocationChangePayload struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	Event    string `json:"event"`
-}
-
-type LocationChangeResponse struct {
-	IsBase64Encoded bool              `json:"isBase64Encoded"`
-	StatusCode      int               `json:"statusCode"`
-	Headers         map[string]string `json:"headers"`
-	Body            string            `json:"body"`
-}
 
 var AWS_TOPIC_ARN string = os.Getenv("AWS_TOPIC_ARN")
 var MESSAGE_GROUP_ID string = os.Getenv("MESSAGE_GROUP_ID")
 
-func serverError(err error) (LocationChangeResponse, error) {
+func serverError(err error) (events.APIGatewayProxyResponse, error) {
 	log.Println(err)
 
-	return LocationChangeResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       err.Error(),
 	}, err
 }
 
-func HandleLocationChange(ctx context.Context, data LocationChangePayload) (LocationChangeResponse, error) {
-	log.Println("hello from logsz")
+func HandleLocationChange(ctx context.Context, data events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	log.Println("HandleLocationChange -> Starting", data.Body)
 
 	if AWS_TOPIC_ARN == "" {
 		err := fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
@@ -66,20 +54,14 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) (Loca
 	}
 	svc := sns.New(sess)
 
-	b, err := json.Marshal(data)
-	if err != nil {
-		return serverError(err)
-	}
-	str := string(b)
-
 	uid, err := uuid.NewV4()
 	if err != nil {
 		return serverError(err)
 	}
 	dedupeID := uid.String()
 
-	result, err := svc.Publish(&sns.PublishInput{
-		Message:                &str,
+	_, err = svc.Publish(&sns.PublishInput{
+		Message:                &data.Body,
 		TopicArn:               &AWS_TOPIC_ARN,
 		MessageGroupId:         &MESSAGE_GROUP_ID,
 		MessageDeduplicationId: &dedupeID,
@@ -88,10 +70,9 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) (Loca
 		return serverError(err)
 	}
 
-	fmt.Println(*result.MessageId)
-	log.Println("Finished executing successfully.")
+	log.Println("HandleLocationChange -> Finished")
 
-	return LocationChangeResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusCreated,
 		Body:       "created sns event",
 	}, nil
