@@ -30,10 +30,14 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 	log.Println("hello from logsz")
 
 	if AWS_TOPIC_ARN == "" {
-		return fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
+		err := fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
+		log.Println(err)
+		return err
 	}
 	if MESSAGE_GROUP_ID == "" {
-		return fmt.Errorf("missing MESSAGE_GROUP_ID environment variable")
+		err := fmt.Errorf("missing MESSAGE_GROUP_ID environment variable")
+		log.Println(err)
+		return err
 	}
 
 	// Initialize a session that the SDK will use to load
@@ -42,12 +46,14 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 		SharedConfigState: session.SharedConfigEnable,
 	})
 	if err != nil {
+		log.Println(err)
 		return fmt.Errorf("error creating session: %v", err)
 	}
 	svc := sns.New(sess)
 
 	b, err := json.Marshal(data)
 	if err != nil {
+		log.Println(err)
 		return fmt.Errorf("json marshal error: %v", err)
 	}
 	str := string(b)
@@ -58,6 +64,7 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 		MessageGroupId: &MESSAGE_GROUP_ID,
 	})
 	if err != nil {
+		log.Println(err)
 		return fmt.Errorf("error publishing to sns: %v", err)
 	}
 
