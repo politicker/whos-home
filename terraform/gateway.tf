@@ -40,11 +40,11 @@ resource "aws_apigatewayv2_integration" "gateway_lambda_integration" {
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_route" "hello_world" {
+resource "aws_apigatewayv2_route" "gateway_route" {
   api_id = aws_apigatewayv2_api.lambda.id
 
   route_key = "GET /hello"
-  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.gateway_lambda_integration.id}"
 }
 
 resource "aws_cloudwatch_log_group" "gateway_log_group" {
@@ -56,7 +56,7 @@ resource "aws_cloudwatch_log_group" "gateway_log_group" {
 resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.hello_world.function_name
+  function_name = data.aws_lambda_function.hello_world.function_name
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_apigatewayv2_api.whos_home_gateway.execution_arn}/*/*"
