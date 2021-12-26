@@ -43,7 +43,7 @@ resource "aws_apigatewayv2_integration" "gateway_lambda_integration" {
 resource "aws_apigatewayv2_route" "gateway_route" {
   api_id = aws_apigatewayv2_api.whos_home_gateway.id
 
-  route_key = "GET /hello"
+  route_key = "POST /"
   target    = "integrations/${aws_apigatewayv2_integration.gateway_lambda_integration.id}"
 }
 
