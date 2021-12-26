@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -26,6 +27,8 @@ var AWS_TOPIC_ARN string = os.Getenv("AWS_TOPIC_ARN")
 var MESSAGE_GROUP_ID string = os.Getenv("MESSAGE_GROUP_ID")
 
 func HandleLocationChange(ctx context.Context, data LocationChangePayload) error {
+	log.Println("hello from logsz")
+
 	if AWS_TOPIC_ARN == "" {
 		return fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
 	}
