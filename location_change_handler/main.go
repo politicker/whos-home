@@ -69,6 +69,8 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 	}
 
 	fmt.Println(*result.MessageId)
+
+	log.Println("Finished executing successfully.")
 	return nil
 }
 
