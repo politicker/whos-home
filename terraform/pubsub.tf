@@ -12,12 +12,16 @@ resource "aws_sqs_queue" "whos_home_queue_quinn" {
   name                        = "whos_home_quinn.fifo"
   fifo_queue                  = true
   content_based_deduplication = false
+  deduplication_scope         = "messageGroup"
+  fifo_throughput_limit       = "perMessageGroupId"
 }
 
 resource "aws_sqs_queue" "whos_home_queue_telegram_bot" {
   name                        = "whos_home_telegram_bot.fifo"
   fifo_queue                  = true
   content_based_deduplication = false
+  deduplication_scope         = "messageGroup"
+  fifo_throughput_limit       = "perMessageGroupId"
 }
 
 resource "aws_sns_topic_subscription" "whos_home_topic_subscription_quinn" {
