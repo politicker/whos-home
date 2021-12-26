@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -23,21 +24,35 @@ type LocationChangePayload struct {
 	Event    string `json:"event"`
 }
 
+type LocationChangeResponse struct {
+	IsBase64Encoded bool              `json:"isBase64Encoded"`
+	StatusCode      int               `json:"statusCode"`
+	Headers         map[string]string `json:"headers"`
+	Body            string            `json:"body"`
+}
+
 var AWS_TOPIC_ARN string = os.Getenv("AWS_TOPIC_ARN")
 var MESSAGE_GROUP_ID string = os.Getenv("MESSAGE_GROUP_ID")
 
-func HandleLocationChange(ctx context.Context, data LocationChangePayload) error {
+func serverError(err error) LocationChangeResponse {
+	log.Println(err)
+
+	return LocationChangeResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       err.Error(),
+	}
+}
+
+func HandleLocationChange(ctx context.Context, data LocationChangePayload) (LocationChangeResponse, error) {
 	log.Println("hello from logsz")
 
 	if AWS_TOPIC_ARN == "" {
 		err := fmt.Errorf("missing AWS_TOPIC_ARN environment variable")
-		log.Println(err)
-		return err
+		return serverError(err), err
 	}
 	if MESSAGE_GROUP_ID == "" {
 		err := fmt.Errorf("missing MESSAGE_GROUP_ID environment variable")
-		log.Println(err)
-		return err
+		return serverError(err), err
 	}
 
 	// Initialize a session that the SDK will use to load
@@ -46,16 +61,15 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 		SharedConfigState: session.SharedConfigEnable,
 	})
 	if err != nil {
-		log.Println(err)
-		return fmt.Errorf("error creating session: %v", err)
+		return serverError(err), err
 	}
 	svc := sns.New(sess)
 
 	b, err := json.Marshal(data)
 	if err != nil {
-		log.Println(err)
-		return fmt.Errorf("json marshal error: %v", err)
+		return serverError(err), err
 	}
+
 	str := string(b)
 
 	result, err := svc.Publish(&sns.PublishInput{
@@ -64,14 +78,16 @@ func HandleLocationChange(ctx context.Context, data LocationChangePayload) error
 		MessageGroupId: &MESSAGE_GROUP_ID,
 	})
 	if err != nil {
-		log.Println(err)
-		return fmt.Errorf("error publishing to sns: %v", err)
+		return serverError(err), err
 	}
 
 	fmt.Println(*result.MessageId)
-
 	log.Println("Finished executing successfully.")
-	return nil
+
+	return LocationChangeResponse{
+		StatusCode: http.StatusCreated,
+		Body:       "created sns event",
+	}, nil
 }
 
 func main() {
