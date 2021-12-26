@@ -28,8 +28,11 @@ resource "aws_sns_topic_subscription" "whos_home_topic_subscription_telegram_bot
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.whos_home_queue_telegram_bot.arn
 }
+data "aws_lambda_function" "telegram_bot" {
+  name = "post-to-telegram"
+}
 
 resource "aws_lambda_event_source_mapping" "telegram_bot" {
   event_source_arn = aws_sqs_queue.whos_home_telegram_bot.arn
-  function_name    = aws_lambda_function.telegram_bot.arn
+  function_name    = data.aws_lambda_function.telegram_bot.arn
 }
