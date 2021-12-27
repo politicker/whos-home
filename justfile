@@ -40,4 +40,4 @@ test-publish:
 		--topic-arn arn:aws:sns:us-east-2:114418550400:whos_home.fifo \
 		--message-group-id "$(echo $RANDOM | md5sum | head -c 2)" \
 		--message-deduplication-id "$(echo $RANDOM | md5sum | head -c 2)" \
-		--message '{"name": "Quinn", "location_name": "Home"}'
+		--message '{"name": "Quinn", "location": "Home", "event": "ARRIVING"}'
