@@ -18,13 +18,6 @@ struct Resident {
 }
 
 #[derive(PartialEq, Serialize, Deserialize)]
-struct Followee {
-	name: String,
-	location_name: String,
-	gpio_pin_number: i32,
-}
-
-#[derive(PartialEq, Serialize, Deserialize)]
 struct Config {
 	name: String,
 	people: Vec<Resident>,
