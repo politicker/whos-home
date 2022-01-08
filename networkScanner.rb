@@ -13,7 +13,7 @@ loop do
     last_detected_at = Time.now
 
     unless is_home
-      `curl --location --request POST 'https://api.telegram.org/bot5074237332:AAEgl4rnBrqScOHcQV1gqNscmlgKBBrUOwo/sendMessage?chat_id=5033674135&text=davehome'`
+      `curl --location --request POST 'https://api.telegram.org/#{ENV['DAVE_TELEGRAM_API_KEY']}/sendMessage?chat_id=5033674135&text=davehome'`
       is_home = true
     end
 
@@ -21,7 +21,7 @@ loop do
   end
 
   if Time.now > last_detected_at + 10.minutes && is_home
-    `curl --location --request POST 'https://api.telegram.org/bot5074237332:AAEgl4rnBrqScOHcQV1gqNscmlgKBBrUOwo/sendMessage?chat_id=5033674135&text=daveout'`
+    `curl --location --request POST 'https://api.telegram.org/#{ENV['DAVE_TELEGRAM_API_KEY']}/sendMessage?chat_id=5033674135&text=daveout'`
     is_home = false
   end
 
