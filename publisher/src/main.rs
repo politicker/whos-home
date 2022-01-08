@@ -10,20 +10,25 @@ use rand::{thread_rng, Rng};
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_sns::Client;
 
-// Result of device on the network?
 #[derive(PartialEq, Serialize, Deserialize)]
-struct Person {
+struct Resident {
 	name: String,
 	mac_address: String,
 	location_name: String,
-	// gpio_pin_number: i16,
+}
+
+#[derive(PartialEq, Serialize, Deserialize)]
+struct Followee {
+	name: String,
+	location_name: String,
+	gpio_pin_number: i32,
 }
 
 #[derive(PartialEq, Serialize, Deserialize)]
 struct Config {
 	name: String,
-	people: Vec<Person>,
-	following: Vec<Person>,
+	people: Vec<Resident>,
+	following: Vec<Resident>,
 	queue_id: String,
 	queue_name: String,
 }
@@ -35,12 +40,18 @@ struct QueueEvent {
 	event: String,
 }
 
+const CONFIG_PATH_ENV_NAME: &str = "CONFIG_PATH";
+const SNS_TOPIC_ARN_ENV_NAME: &str = "SNS_TOPIC_ARN";
+
+const DEPARTURE_MINUTES_THRESHOLD: i64 = 5;
+
 #[tokio::main]
 async fn main() {
-	let config_path = env::var("CONFIG_PATH").unwrap_or(String::from("../example_config.yaml"));
+	let config_path =
+		env::var(CONFIG_PATH_ENV_NAME).unwrap_or(String::from("../example_config.yaml"));
 	let config_contents = File::open(config_path).unwrap();
 
-	let topic_arn = env::var("SNS_TOPIC_ARN").unwrap();
+	let topic_arn = env::var(SNS_TOPIC_ARN_ENV_NAME).unwrap();
 
 	let config: Config = serde_yaml::from_reader(config_contents).unwrap();
 
@@ -62,6 +73,7 @@ async fn main() {
 	// 	.output()
 	// 	.expect("expected output");
 
+	// TODO: Count errors and exit program after a certain amount
 	loop {
 		// macOS version of arp-scan command
 		// sudo arp-scan --localnet --interface en0
@@ -71,7 +83,7 @@ async fn main() {
 			.arg("en0")
 			.output()
 		{
-			Ok(o) => o,
+			Ok(out) => out,
 			Err(_) => {
 				println!("arp-scan command failed");
 				continue;
@@ -80,7 +92,7 @@ async fn main() {
 
 		if !output.status.success() {
 			println!("arp-scan command returned error");
-			break;
+			continue;
 		}
 
 		let text_output = match String::from_utf8(output.stdout) {
@@ -91,44 +103,45 @@ async fn main() {
 			}
 		};
 
-		for person in &config.people {
-			if text_output.contains(&person.mac_address) {
+		for resident in &config.people {
+			if text_output.contains(&resident.mac_address) {
 				last_detected_at = time::Instant::now();
 
 				if !is_home {
 					is_home = true;
 					println!("arriving home");
 
-					match publish_to_sns(&person, &client, &topic_arn, "ARRIVING").await {
-						Ok(_) => println!("published ARRIVING for: {}", person.name),
-						Err(_) => println!("failed to publish ARRIVING for: {}", person.name),
+					match publish_to_sns(&resident, &client, &topic_arn, "ARRIVING").await {
+						Ok(_) => println!("published ARRIVING for: {}", resident.name),
+						Err(_) => println!("failed to publish ARRIVING for: {}", resident.name),
 					}
 				}
 				continue;
 			}
 
-			let ten_min_from_last = match last_detected_at.checked_add(Duration::minutes(10)) {
-				Some(d) => d,
-				None => {
-					println!("failed to parse ten_min_from_last");
-					continue;
-				}
-			};
+			let departure_cutoff_time =
+				match last_detected_at.checked_add(Duration::minutes(DEPARTURE_MINUTES_THRESHOLD)) {
+					Some(t) => t,
+					None => {
+						println!("failed to parse departure_cutoff_time");
+						continue;
+					}
+				};
 
-			if Instant::now() > ten_min_from_last && is_home {
+			if Instant::now() > departure_cutoff_time && is_home {
 				is_home = false;
 				println!("leaving home");
 
-				match publish_to_sns(&person, &client, &topic_arn, "DEPARTING").await {
-					Ok(_) => println!("published DEPARTING for: {}", person.name),
-					Err(_) => println!("failed to publish DEPARTING for: {}", person.name),
+				match publish_to_sns(&resident, &client, &topic_arn, "DEPARTING").await {
+					Ok(_) => println!("published DEPARTING for: {}", resident.name),
+					Err(_) => println!("failed to publish DEPARTING for: {}", resident.name),
 				}
 			}
 		}
 	}
 
 	async fn publish_to_sns(
-		person: &Person,
+		resident: &Resident,
 		client: &aws_sdk_sns::Client,
 		topic_arn: &String,
 		event: &str,
@@ -140,8 +153,8 @@ async fn main() {
 			.collect();
 
 		let event = QueueEvent {
-			name: person.name.clone(),
-			location: person.location_name.clone(),
+			name: resident.name.clone(),
+			location: resident.location_name.clone(),
 			event: String::from(event),
 		};
 		let json = serde_json::to_string(&event)?;

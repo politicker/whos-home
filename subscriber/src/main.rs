@@ -1,6 +1,5 @@
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_sqs::{Client, Error};
-// use serde_json::json;
+use aws_sdk_sqs::Client;
 
 static QUEUE_URL: &str = "https://sqs.us-east-1.amazonaws.com/824357296248/whos-home-main-sub.fifo";
 
