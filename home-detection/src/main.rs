@@ -4,6 +4,9 @@ use std::fs::File;
 use std::process::Command;
 use time::{Duration, Instant};
 
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_sns::Client;
+
 // Result of device on the network?
 #[derive(PartialEq, Serialize, Deserialize)]
 struct Person {
@@ -22,11 +25,21 @@ struct Config {
 	queue_name: String,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
 	let config_path = env::var("CONFIG_PATH").unwrap_or(String::from("../example_config.yaml"));
 	let config_contents = File::open(config_path).unwrap();
 
+	let topic_arn = env::var("SNS_TOPIC_ARN").unwrap();
+
 	let config: Config = serde_yaml::from_reader(config_contents).unwrap();
+
+	let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
+	let aws_config = aws_config::from_env().region(region_provider).load().await;
+	let client = Client::new(&aws_config);
+
+	let mut last_detected_at = time::Instant::now();
+	let mut is_home = false;
 
 	// Raspi version of arp-scan command
 	// arp-scan --localnet --interface en0
@@ -38,9 +51,6 @@ fn main() {
 	// 	.expect("expected output");
 
 	loop {
-		let mut last_detected_at = time::Instant::now();
-		let mut is_home = false;
-
 		// macOS version of arp-scan command
 		// sudo arp-scan --localnet --interface en0
 		let output = Command::new("arp-scan")
@@ -58,12 +68,21 @@ fn main() {
 		let text_output = String::from_utf8(output.stdout).expect("failed to utf-decode cmd output");
 		for person in &config.people {
 			if text_output.contains(&person.mac_address) {
-				print!("Found Harrison's phone on wifi");
-
 				last_detected_at = time::Instant::now();
 
 				if !is_home {
-					// publish 'person arrived home'
+					println!("arriving home");
+
+					client
+						.publish()
+						.topic_arn(&topic_arn)
+						.message_group_id("l23")
+						.message_deduplication_id("foo") // TODO: generate random number
+						.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"ARRIVING\"}")
+						.send()
+						.await
+						.expect("failed to publish arrival");
+
 					is_home = true;
 				}
 				continue;
@@ -71,8 +90,17 @@ fn main() {
 
 			let ten_min_from_last = last_detected_at.checked_add(Duration::minutes(10)).unwrap();
 			if Instant::now() > ten_min_from_last && is_home {
-				// publish 'person left home'
 				is_home = false;
+				println!("leaving home");
+
+				client
+					.publish()
+					.topic_arn(&topic_arn)
+					.message_group_id("124")
+					.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"DEPARTING\"}")
+					.send()
+					.await
+					.expect("failed to publish departure");
 			}
 		}
 	}
