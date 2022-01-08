@@ -28,6 +28,13 @@ struct Config {
 	queue_name: String,
 }
 
+#[derive(Serialize, Deserialize)]
+struct QueueEvent {
+	name: String,
+	location: String,
+	event: String,
+}
+
 #[tokio::main]
 async fn main() {
 	let config_path = env::var("CONFIG_PATH").unwrap_or(String::from("../example_config.yaml"));
@@ -82,12 +89,19 @@ async fn main() {
 						.map(char::from)
 						.collect();
 
+					let event = QueueEvent {
+						name: person.name.clone(),
+						location: person.location_name.clone(),
+						event: String::from("ARRIVING"),
+					};
+					let json = serde_json::to_string(&event).unwrap();
+
 					client
 						.publish()
 						.topic_arn(&topic_arn)
 						.message_group_id("l23")
 						.message_deduplication_id(rand_string)
-						.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"ARRIVING\"}")
+						.message(json)
 						.send()
 						.await
 						.expect("failed to publish arrival");
@@ -108,12 +122,19 @@ async fn main() {
 					.map(char::from)
 					.collect();
 
+				let event = QueueEvent {
+					name: person.name.clone(),
+					location: person.location_name.clone(),
+					event: String::from("DEPARTING"),
+				};
+				let json = serde_json::to_string(&event).unwrap();
+
 				client
 					.publish()
 					.topic_arn(&topic_arn)
 					.message_group_id("124")
 					.message_deduplication_id(rand_string)
-					.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"DEPARTING\"}")
+					.message(json)
 					.send()
 					.await
 					.expect("failed to publish departure");
