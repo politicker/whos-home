@@ -1,5 +1,8 @@
 set dotenv-load := true
 
+run-wifi:
+	cd home-detection && cargo r
+
 # run the pi listener script.
 run:
 	cd pi-listener && cargo r
