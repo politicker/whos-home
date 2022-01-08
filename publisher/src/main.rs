@@ -47,8 +47,7 @@ const DEPARTURE_MINUTES_THRESHOLD: i64 = 5;
 
 #[tokio::main]
 async fn main() {
-	let config_path =
-		env::var(CONFIG_PATH_ENV_NAME).unwrap_or(String::from("../example_config.yaml"));
+	let config_path = env::var(CONFIG_PATH_ENV_NAME).unwrap_or(String::from("../config.yaml"));
 	let config_contents = File::open(config_path).unwrap();
 
 	let topic_arn = env::var(SNS_TOPIC_ARN_ENV_NAME).unwrap();

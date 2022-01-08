@@ -1,14 +1,30 @@
 queue_id: wkeljlk3j4kl3j43
-queue_name: whos-home-queue-dave
+queue_name: whos-home-queue
+
+# The people who's arriving/leaving triggers pub/sub messages to other devices
+people:
+  - name: You
+    location_name: Home
+    mac_address: b2:67:ee:c1:fa:fb  # your mac address
+
+  - name: Your Roommate
+    location_name: Home
+    mac_address: b2:5g:42:c1:f0:l5  # your roommates mac address
+
+# Receiving pub/sub messages about these people toggles lights on your Raspi
 following:
-  - name: Harrison
+  - name: Dave
     location_name: Home
     gpio_pin_number: 48
 
-  - name: Kyle
+  - name: Nicole
+    location_name: Home
+    gpio_pin_number: 48
+
+  - name: Quinn
     location_name: Home
     gpio_pin_number: 53
 
-  - name: Mom
+  - name: Kyle
     location_name: Home
     gpio_pin_number: 87
