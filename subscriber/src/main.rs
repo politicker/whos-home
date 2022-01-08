@@ -36,13 +36,43 @@ async fn handle_message(
 	println!("{}", message.body.unwrap());
 
 	match client
-		.delete_message()
+		.receive_message()
 		.queue_url(QUEUE_URL)
-		.receipt_handle(message.receipt_handle.unwrap())
+		// .receipt_handle(message.receipt_handle.unwrap())
 		.send()
 		.await
 	{
-		Ok(_) => println!("received message"),
+		Ok(msg) => {
+			println!("received message");
+
+			// NOTE: The assumption here is the default value of msg.messages is an empty array
+			for message in msg.messages.unwrap_or_default() {
+				let body = match message.body {
+					Some(b) => b,
+					None => {
+						println!("empty body, skipping");
+						continue;
+					}
+				};
+
+				let body: &str = &body;
+				let event: QueueEvent = match serde_json::from_str(body) {
+					Ok(e) => e,
+					Err(err) => {
+						println!("failed to parse incoming message: {}", err);
+						continue;
+					}
+				};
+
+				for f in &config.following {
+					// The message received from the pub/sub queue is about someone you follow
+					if f.name == event.name {
+						// TODO: toggle f.gpio_pin_number on raspi
+						println!("toggle gpio: {}", f.gpio_pin_number)
+					}
+				}
+			}
+		}
 		Err(_) => println!("error deleting received message"),
 	}
 }
@@ -70,9 +100,9 @@ async fn main() {
 			Ok(message) => {
 				println!("Request completed. checking for messages...");
 
-				for m in message.messages {
-					for m2 in m {
-						handle_message(&client, m2).await;
+				for ml in message.messages {
+					for msg in ml {
+						handle_message(&client, msg, &config).await;
 					}
 				}
 			}
