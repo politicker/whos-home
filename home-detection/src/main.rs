@@ -4,6 +4,9 @@ use std::fs::File;
 use std::process::Command;
 use time::{Duration, Instant};
 
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_sns::Client;
 
@@ -73,11 +76,17 @@ async fn main() {
 				if !is_home {
 					println!("arriving home");
 
+					let rand_string: String = thread_rng()
+						.sample_iter(&Alphanumeric)
+						.take(30)
+						.map(char::from)
+						.collect();
+
 					client
 						.publish()
 						.topic_arn(&topic_arn)
 						.message_group_id("l23")
-						.message_deduplication_id("foo") // TODO: generate random number
+						.message_deduplication_id(rand_string)
 						.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"ARRIVING\"}")
 						.send()
 						.await
@@ -93,10 +102,17 @@ async fn main() {
 				is_home = false;
 				println!("leaving home");
 
+				let rand_string: String = thread_rng()
+					.sample_iter(&Alphanumeric)
+					.take(30)
+					.map(char::from)
+					.collect();
+
 				client
 					.publish()
 					.topic_arn(&topic_arn)
 					.message_group_id("124")
+					.message_deduplication_id(rand_string)
 					.message("{\"name\": \"Harrison\", \"location\": \"Home\", \"event\": \"DEPARTING\"}")
 					.send()
 					.await
