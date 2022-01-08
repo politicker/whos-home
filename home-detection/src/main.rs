@@ -51,6 +51,8 @@ async fn main() {
 	let mut last_detected_at = time::Instant::now();
 	let mut is_home = false;
 
+	// TODO: check if arp-scan is installed on system
+
 	// Raspi version of arp-scan command
 	// arp-scan --localnet --interface en0
 	// let output = Command::new("arp-scan")
@@ -63,19 +65,32 @@ async fn main() {
 	loop {
 		// macOS version of arp-scan command
 		// sudo arp-scan --localnet --interface en0
-		let output = Command::new("arp-scan")
+		let output = match Command::new("arp-scan")
 			.arg("--localnet")
 			.arg("--interface")
 			.arg("en0")
 			.output()
-			.expect("failed to build command arp-scan");
+		{
+			Ok(o) => o,
+			Err(_) => {
+				println!("arp-scan command failed");
+				continue;
+			}
+		};
 
 		if !output.status.success() {
 			println!("arp-scan command returned error");
 			break;
 		}
 
-		let text_output = String::from_utf8(output.stdout).expect("failed to utf-decode cmd output");
+		let text_output = match String::from_utf8(output.stdout) {
+			Ok(str) => str,
+			Err(_) => {
+				println!("failed to utf-decode cmd output");
+				continue;
+			}
+		};
+
 		for person in &config.people {
 			if text_output.contains(&person.mac_address) {
 				last_detected_at = time::Instant::now();
@@ -84,17 +99,30 @@ async fn main() {
 					is_home = true;
 					println!("arriving home");
 
-					publish_to_sns(&person, &client, &topic_arn, "ARRIVING").await;
+					match publish_to_sns(&person, &client, &topic_arn, "ARRIVING").await {
+						Ok(_) => println!("published ARRIVING for: {}", person.name),
+						Err(_) => println!("failed to publish ARRIVING for: {}", person.name),
+					}
 				}
 				continue;
 			}
 
-			let ten_min_from_last = last_detected_at.checked_add(Duration::minutes(10)).unwrap();
+			let ten_min_from_last = match last_detected_at.checked_add(Duration::minutes(10)) {
+				Some(d) => d,
+				None => {
+					println!("failed to parse ten_min_from_last");
+					continue;
+				}
+			};
+
 			if Instant::now() > ten_min_from_last && is_home {
 				is_home = false;
 				println!("leaving home");
 
-				publish_to_sns(&person, &client, &topic_arn, "DEPARTING").await;
+				match publish_to_sns(&person, &client, &topic_arn, "DEPARTING").await {
+					Ok(_) => println!("published DEPARTING for: {}", person.name),
+					Err(_) => println!("failed to publish DEPARTING for: {}", person.name),
+				}
 			}
 		}
 	}
@@ -104,7 +132,7 @@ async fn main() {
 		client: &aws_sdk_sns::Client,
 		topic_arn: &String,
 		event: &str,
-	) {
+	) -> Result<(), Box<dyn std::error::Error>> {
 		let rand_string: String = thread_rng()
 			.sample_iter(&Alphanumeric)
 			.take(30)
@@ -116,7 +144,7 @@ async fn main() {
 			location: person.location_name.clone(),
 			event: String::from(event),
 		};
-		let json = serde_json::to_string(&event).unwrap();
+		let json = serde_json::to_string(&event)?;
 
 		client
 			.publish()
@@ -125,7 +153,8 @@ async fn main() {
 			.message_deduplication_id(rand_string)
 			.message(json)
 			.send()
-			.await
-			.expect("failed to publish departure");
+			.await?;
+
+		return Ok(());
 	}
 }
