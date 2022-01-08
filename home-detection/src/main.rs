@@ -81,32 +81,10 @@ async fn main() {
 				last_detected_at = time::Instant::now();
 
 				if !is_home {
+					is_home = true;
 					println!("arriving home");
 
-					let rand_string: String = thread_rng()
-						.sample_iter(&Alphanumeric)
-						.take(30)
-						.map(char::from)
-						.collect();
-
-					let event = QueueEvent {
-						name: person.name.clone(),
-						location: person.location_name.clone(),
-						event: String::from("ARRIVING"),
-					};
-					let json = serde_json::to_string(&event).unwrap();
-
-					client
-						.publish()
-						.topic_arn(&topic_arn)
-						.message_group_id("l23")
-						.message_deduplication_id(rand_string)
-						.message(json)
-						.send()
-						.await
-						.expect("failed to publish arrival");
-
-					is_home = true;
+					publish_to_sns(&person, &client, &topic_arn, "ARRIVING").await;
 				}
 				continue;
 			}
@@ -116,29 +94,38 @@ async fn main() {
 				is_home = false;
 				println!("leaving home");
 
-				let rand_string: String = thread_rng()
-					.sample_iter(&Alphanumeric)
-					.take(30)
-					.map(char::from)
-					.collect();
-
-				let event = QueueEvent {
-					name: person.name.clone(),
-					location: person.location_name.clone(),
-					event: String::from("DEPARTING"),
-				};
-				let json = serde_json::to_string(&event).unwrap();
-
-				client
-					.publish()
-					.topic_arn(&topic_arn)
-					.message_group_id("124")
-					.message_deduplication_id(rand_string)
-					.message(json)
-					.send()
-					.await
-					.expect("failed to publish departure");
+				publish_to_sns(&person, &client, &topic_arn, "DEPARTING").await;
 			}
 		}
+	}
+
+	async fn publish_to_sns(
+		person: &Person,
+		client: &aws_sdk_sns::Client,
+		topic_arn: &String,
+		event: &str,
+	) {
+		let rand_string: String = thread_rng()
+			.sample_iter(&Alphanumeric)
+			.take(30)
+			.map(char::from)
+			.collect();
+
+		let event = QueueEvent {
+			name: person.name.clone(),
+			location: person.location_name.clone(),
+			event: String::from(event),
+		};
+		let json = serde_json::to_string(&event).unwrap();
+
+		client
+			.publish()
+			.topic_arn(topic_arn)
+			.message_group_id("124")
+			.message_deduplication_id(rand_string)
+			.message(json)
+			.send()
+			.await
+			.expect("failed to publish departure");
 	}
 }
